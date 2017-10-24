@@ -1,6 +1,8 @@
 import * as firebase from 'firebase';
+var util = require('./Utils.js');
 
 var fireInstance = null;
+// var test = true;
 
 export default class FirebaseDao {
 
@@ -19,11 +21,17 @@ export default class FirebaseDao {
 
 		this.setLogedInCallback = this.setLogedInCallback.bind(this);
 		this.authStateChanged = this.authStateChanged.bind(this);
+		this.createPin = this.createPin.bind(this);
 		fireInstance = this;
 	}
 
 	setLogedInCallback(callback) {
 		this.logedInCallback = callback;
+
+		// if (test){
+		// 	test = false
+		// 	util.runUtests(fireInstance);
+		// }
 	}
 
 	authStateChanged(user){
@@ -71,6 +79,16 @@ export default class FirebaseDao {
 		  callback(true);
 		}).catch(function(error) {
 		  callback(false);
+		});
+	}
+
+	createPin(lat, lng, title, description){
+		firebase.database().ref('map/pin/' + util.generateUUID()).set({
+			lat: lat,
+			lng: lng,
+			title: title, 
+			description: description,
+			user_id: this.user.uid
 		});
 	}
 }
