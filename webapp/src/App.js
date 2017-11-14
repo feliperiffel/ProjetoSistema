@@ -25,6 +25,7 @@ class App extends Component {
       logedIn: false,
       usrEmail: "",
       usrPassword: "",
+      creatingNewPin: false,
     };
 
     this.handleEmailChanged = this.handleEmailChanged.bind(this);
@@ -39,6 +40,10 @@ class App extends Component {
     this.changeFormLng = this.changeFormLng.bind(this);
     this.changeFormTitle = this.changeFormTitle.bind(this);
     this.changeFormDesc = this.changeFormDesc.bind(this);
+    this.handleStartPinCreation = this.handleStartPinCreation.bind(this);
+    this.handleClickOnMap = this.handleClickOnMap.bind(this);
+    this.handleCreateBackup = this.handleCreateBackup.bind(this);
+    this.handleRestoreBackup = this.handleRestoreBackup.bind(this);
 
     this.firebaseDao.setLogedInCallback(this.handleUserLogedIn)
 
@@ -58,6 +63,30 @@ class App extends Component {
 
   handlePasswordChanged(e){
     this.setState({usrPassword: e.target.value});
+  }
+
+  handleStartPinCreation(e){
+    this.setState({creatingNewPin:true});
+  }
+
+  handleCreateBackup(e){
+    this.firebaseDao.buildBackupFile();
+  }
+
+  handleRestoreBackup(e){
+    this.firebaseDao.readBackupFile();
+  }
+
+  handleCancelPinCreation(e){
+    this.setState({creatingNewPin:false}); 
+  }
+
+  handleClickOnMap(lat,lng){
+    console.log("Click")
+    if (this.state.creatingNewPin){
+      this.createPinForm.lat = lat
+      this.createPinForm.lng = lng
+    }
   }
 
   handleCreatePin(){
@@ -120,13 +149,25 @@ class App extends Component {
   render() {
     var loginCreateContainer = "";
     if (this.state.logedIn) {
+
+      if (this.state.creatingNewPin) {
       loginCreateContainer = 
         <div className="login_data row">
-          <label>{this.state.usrEmail}</label>
-          <button type="button" className="btn btn-danger" onClick={this.handleLogoutUser}>Logout</button>
-          <button type="button" className="btn btn-default" data-toggle="modal" data-target="#createPinModal">Create Pin</button>
-          {this.renderModal()}
+          <label className="col-sm-6">Selecione no mapa o local a ser criado o pin.</label>
+          <button type="button" className="btn btn-danger col-sm-2" onClick={this.handleCancelPinCreation}>Cancelar</button>
+          <button type="button" className="btn btn-default col-sm-offset-1 col-sm-2" data-toggle="modal" data-target="#createPinModal">Criar</button>
         </div>;
+      } else {
+        loginCreateContainer = 
+          <div className="login_data row">
+            <label className="col-sm-6">{this.state.usrEmail}</label>
+            <button type="button" className="btn btn-danger col-sm-2" onClick={this.handleLogoutUser}>Deslogar</button>
+            <button type="button" className="btn btn-default col-sm-offset-1 col-sm-2" onClick={this.handleStartPinCreation}>Criar novo pin</button>
+            <button type="button" className="btn btn-default col-sm-offset-1 col-sm-2" onClick={this.handleCreateBackup}>Criar Backup</button>
+            {this.renderModal()}
+          </div>;
+      }
+
     } else {
       loginCreateContainer = 
             <div className="login_data row">
@@ -135,14 +176,14 @@ class App extends Component {
                   <input type="text" value={this.state.usrEmail} onChange={this.handleEmailChanged} />
                 </label>
                 <label className="col-sm-3">
-                  password:
+                  senha:
                   <input type="password" value={this.state.usrPassword} onChange={this.handlePasswordChanged} />
                 </label>
                 <div className="col-sm-3">
-                  <button type="button" className="btn btn-default" onClick={this.handleCreateUser}>Create</button>
+                  <button type="button" className="btn btn-default" onClick={this.handleCreateUser}>Criar Conta</button>
                 </div>
                 <div className="col-sm-3">
-                  <button type="button" className="btn btn-primary" onClick={this.handleLogIn}>Login</button>
+                  <button type="button" className="btn btn-primary" onClick={this.handleLogIn}>Logar</button>
                 </div>
             </div>;
     }
@@ -158,8 +199,14 @@ class App extends Component {
         <div className="main-container">
             <MapComponent 
             center={[-30.1010427,-51.2990346]}
-            zoom={10}/>
+            zoom={10}
+            onClick={this.handleClickOnMap}/>
         </div>
+        <form id="jsonFile" name="jsonFile" enctype="multipart/form-data" method="post">
+              <label>Selecione o Arquivo de Backup para ser restaurado</label>
+             <input type='file' id='fileinput'/>
+             <button type="button" className="btn btn-default" onClick={this.handleRestoreBackup}>Restaurar Backup</button>
+        </form>
       </div>
     );
   }
