@@ -26,6 +26,7 @@ class App extends Component {
       usrEmail: "",
       usrPassword: "",
       creatingNewPin: false,
+      admin: false
     };
 
     this.handleEmailChanged = this.handleEmailChanged.bind(this);
@@ -44,17 +45,34 @@ class App extends Component {
     this.handleClickOnMap = this.handleClickOnMap.bind(this);
     this.handleCreateBackup = this.handleCreateBackup.bind(this);
     this.handleRestoreBackup = this.handleRestoreBackup.bind(this);
+    this.handleEnterAdmin = this.handleEnterAdmin.bind(this);
+    this.changeSenhaAdmin = this.changeSenhaAdmin.bind(this);
 
     this.firebaseDao.setLogedInCallback(this.handleUserLogedIn)
 
     this.createPinForm = {lat: "",
                           lng: "",
                           title: "",
-                          description: ""}
+                          description: ""};
+
+    this.senhaAdmin = "";
+  }
+
+  changeSenhaAdmin(e){
+      this.senhaAdmin = e.target.value;
+      this.setState();
+  }
+
+  handleEnterAdmin(){
+    if (this.senhaAdmin === "ADMIN"){
+      this.setState({admin: true})  
+    }
+    this.senhaAdmin = ""
+    $('#requestAdminModal').modal('hide');
   }
 
   handleUserLogedIn(user){
-    this.setState({logedIn: true, usrEmail: user.email});
+    this.setState({logedIn: true, usrEmail: user.email, admin: false});
   }
 
   handleEmailChanged(e){
@@ -139,7 +157,7 @@ class App extends Component {
     var self = this;
     this.firebaseDao.signOutUser(function(success){
       if (success){
-        self.setState({logedIn: false})
+        self.setState({logedIn: false, admin: false})
       } else {
         bootbox.alert("An error occurs when try logout user.");
       }
@@ -160,10 +178,13 @@ class App extends Component {
       } else {
         loginCreateContainer = 
           <div className="login_data row">
-            <label className="col-sm-6">{this.state.usrEmail}</label>
+            <label className="col-sm-4">{this.state.usrEmail}</label>
             <button type="button" className="btn btn-danger col-sm-2" onClick={this.handleLogoutUser}>Deslogar</button>
             <button type="button" className="btn btn-default col-sm-offset-1 col-sm-2" onClick={this.handleStartPinCreation}>Criar novo pin</button>
-            <button type="button" className="btn btn-default col-sm-offset-1 col-sm-2" onClick={this.handleCreateBackup}>Criar Backup</button>
+            {this.state.admin ? 
+              "" 
+              : 
+              <button type="button" className="btn btn-default col-sm-offset-1 col-sm-1" data-toggle="modal" data-target="#requestAdminModal">Admin</button>}
             {this.renderModal()}
           </div>;
       }
@@ -188,6 +209,16 @@ class App extends Component {
             </div>;
     }
 
+    var backupForm 
+    if (this.state.admin) {
+      backupForm = <form id="jsonFile" name="jsonFile" enctype="multipart/form-data" method="post">
+              <label>Selecione o Arquivo de Backup para ser restaurado</label>
+             <input type='file' id='fileinput'/>
+             <button type="button" className="btn btn-default" onClick={this.handleRestoreBackup}>Restaurar Backup</button>
+             <button type="button" className="btn btn-default" onClick={this.handleCreateBackup}>Criar Backup</button>
+        </form>;
+    }
+
     return (
       <div className="App">
         <div className="App-header">
@@ -202,11 +233,8 @@ class App extends Component {
             zoom={10}
             onClick={this.handleClickOnMap}/>
         </div>
-        <form id="jsonFile" name="jsonFile" enctype="multipart/form-data" method="post">
-              <label>Selecione o Arquivo de Backup para ser restaurado</label>
-             <input type='file' id='fileinput'/>
-             <button type="button" className="btn btn-default" onClick={this.handleRestoreBackup}>Restaurar Backup</button>
-        </form>
+        {backupForm}
+        {this.renderAdminRequest()}
       </div>
     );
   }
@@ -261,6 +289,34 @@ class App extends Component {
             <div className="modal-footer">
               <button type="button" className="btn btn-secondary" data-dismiss="modal">Close</button>
               <button type="button" className="btn btn-primary" onClick={this.handleCreatePin}>Save changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      );
+  }
+
+  renderAdminRequest(){
+    return(
+      <div className="modal fade" id="requestAdminModal" tabIndex="-1" role="dialog" aria-labelledby="requestAdminModalLabel" aria-hidden="true">
+        <div className="modal-dialog" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="requestAdminModalLabel">Request Admin</h5>
+              <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="row">
+                <div className="col-sm-12">
+                  <input type="text" onChange={this.changeSenhaAdmin} className="form-control col-sm-12" placeholder="Senha Admin" value={this.senhaAdmin}/>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" data-dismiss="modal">Fechar</button>
+              <button type="button" className="btn btn-primary" onClick={this.handleEnterAdmin}>Entrat</button>
             </div>
           </div>
         </div>
