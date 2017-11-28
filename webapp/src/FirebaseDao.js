@@ -27,11 +27,6 @@ export default class FirebaseDao {
 
 	setLogedInCallback(callback) {
 		this.logedInCallback = callback;
-
-		// if (test){
-		// 	test = false
-		// 	util.runUtests(fireInstance);
-		// }
 	}
 
 	authStateChanged(user){
@@ -87,6 +82,26 @@ export default class FirebaseDao {
 			fileSaver.saveAs(blob, "backup.json");
 		 });
 		});
+	}
+
+	listPins(callback){
+		var pins = []
+		var ref = firebase.database().ref('map/pin/');
+		ref.once('value', function (snap) {
+		 snap.forEach(function (childSnap) {
+		 	var v = childSnap.val();
+		 	v.key = childSnap.key;
+		  	pins.push(v);
+		 });
+		 if(callback){
+		 	callback(pins);
+		 }
+		});
+	}
+
+	firebaseRemove(key){
+		var ref = firebase.database().ref('map/pin/' + key);
+		ref.remove();
 	}
 
 

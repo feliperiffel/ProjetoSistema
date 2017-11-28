@@ -56,6 +56,7 @@ class App extends Component {
                           description: ""};
 
     this.senhaAdmin = "";
+    this.first = false
   }
 
   changeSenhaAdmin(e){
@@ -100,10 +101,13 @@ class App extends Component {
   }
 
   handleClickOnMap(lat,lng){
-    console.log("Click")
     if (this.state.creatingNewPin){
       this.createPinForm.lat = lat
       this.createPinForm.lng = lng
+      this.setState({});
+      window.setTimeout(
+        function(){ $('#createPinModal').modal('show') 
+      }, 100);
     }
   }
 
@@ -126,8 +130,15 @@ class App extends Component {
                           lng: "",
                           title: "",
                           description: ""};
-    this.setState({});
+    this.setState({creatingNewPin: false});
     $('#createPinModal').modal('hide')
+    var ss = this;
+    this.firebaseDao.listPins(function(pins){
+        ss.pins = pins;
+        window.setTimeout(function(){
+          ss.setState({});
+        }, 100);
+      });
     bootbox.alert("New Pin Sucessfully Created!");
   }
 
@@ -165,6 +176,18 @@ class App extends Component {
   }
 
   render() {
+
+    if (!this.first){
+      this.first = true;
+      var ss = this;
+      this.firebaseDao.listPins(function(pins){
+        ss.pins = pins;
+        window.setTimeout(function(){
+          ss.setState({});
+        }, 100);
+      });
+    }
+
     var loginCreateContainer = "";
     if (this.state.logedIn) {
 
@@ -173,7 +196,7 @@ class App extends Component {
         <div className="login_data row">
           <label className="col-sm-6">Selecione no mapa o local a ser criado o pin.</label>
           <button type="button" className="btn btn-danger col-sm-2" onClick={this.handleCancelPinCreation}>Cancelar</button>
-          <button type="button" className="btn btn-default col-sm-offset-1 col-sm-2" data-toggle="modal" data-target="#createPinModal">Criar</button>
+          {this.renderModal()}
         </div>;
       } else {
         loginCreateContainer = 
@@ -185,7 +208,6 @@ class App extends Component {
               "" 
               : 
               <button type="button" className="btn btn-default col-sm-offset-1 col-sm-1" data-toggle="modal" data-target="#requestAdminModal">Admin</button>}
-            {this.renderModal()}
           </div>;
       }
 
@@ -231,6 +253,7 @@ class App extends Component {
             <MapComponent 
             center={[-30.1010427,-51.2990346]}
             zoom={10}
+            pinList={this.pins}
             onClick={this.handleClickOnMap}/>
         </div>
         {backupForm}
@@ -273,10 +296,10 @@ class App extends Component {
             <div className="modal-body">
               <div className="row">
                 <div className="col-sm-12">
-                  <input type="text" onChange={this.changeFormLat} className="form-control col-sm-12" placeholder="Latitude...." value={this.createPinForm.lat}/>
+                  <input type="text" className="form-control col-sm-12" placeholder="Latitude...." value={this.createPinForm.lat}/>
                 </div>
                 <div className="col-sm-12">
-                  <input type="text" onChange={this.changeFormLng} className="form-control col-sm-12" placeholder="Longitude...." value={this.createPinForm.lng}/>
+                  <input type="text" className="form-control col-sm-12" placeholder="Longitude...." value={this.createPinForm.lng}/>
                 </div>
                 <div className="col-sm-12">
                   <input type="text" onChange={this.changeFormTitle} className="form-control col-sm-12" placeholder="Titulo...." value={this.createPinForm.title}/>
