@@ -1,0 +1,2 @@
+Teste unitátio - Debug.js
+todo o resro é implementação das features.
